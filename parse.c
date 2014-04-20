@@ -1,8 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <pthread.h>
-#include "uthash.h"
 #include "parse.h"
 
 Node createNode(void* name, void* address, void* state, void* zip, void* id, int credit){
@@ -107,6 +102,25 @@ int parse_db(char* file_name){
     if(buffer) free(buffer);
     fclose(fp);
     return 1;
+}
+
+int parse_categories(char* file_name){
+    FILE *fp = fopen(file_name, "r");
+    size_t sizeof_line = 0;
+    char* category = NULL;
+    int count=0;
+    ssize_t line_length = 0;
+    /*Taking the next line from fp, allocating space for it in buffer and returns
+     * the length of the line
+     */
+    while ((line_length = getline(&category, &sizeof_line, fp)) > 0) {
+        //create shared memory
+        //create consumer process
+    }
+    if(category) free(category);
+    fclose(fp);
+    return 1;
+
 }
 
 void print_files() {

@@ -1,8 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <string.h>
-#include "uthash.h"
+#include "producer.h"
 
 int producer(char* file_name){
     FILE *fp = fopen(file_name, "r");
@@ -28,54 +24,45 @@ int producer(char* file_name){
             key = malloc(strlen(token)*sizeof(char));   //store this token as key
             sprintf(key,"%s",token);
             //count++;
-            Node customer = createNode(NULL,NULL,NULL,NULL,NULL,0);
+            Order nWo;      //this is an order
 
-            printf("%s\n", token);
             while(token != NULL && strlen(token) > 0){
                 if(strcmp(token,"")==0){
                     token = strtok(NULL,delim);
-                    printf("%s\n", token);
                     continue;
                 }
                 else if(count == 1){
                     //customer->name = token;
-                    customer->name = malloc((strlen(token)+1));
-                    strcpy(customer->name,token);
-                    printf("%s, %s\n", token, customer->name);
+                    nWo->book_title = malloc((strlen(token)+1));
+                    strcpy(nWo->book_title,token);
+                    //printf("%s, %s\n", token, customer->name);
                 }
                 else if(count == 2){
                     //customer->id = token;
-                    customer->id= malloc((strlen(token)+1));
-                    strcpy(customer->id,token);
+                    nWo->price = atof(token);
                 }
                 else if(count == 3){
-                    customer->credit = atof(token);
+                    //customer->address = token;
+                    nWo->id = malloc((strlen(token)+1));
+                    strcpy(nWo->id,token);
                 }
                 else if(count == 4){
                     //customer->address = token;
-                    customer->address = malloc((strlen(token)+1));
-                    strcpy(customer->address,token);
+                    nWo->category = malloc((strlen(token)+1));
+                    strcpy(nWo->category,token);
 
                 }
-                else if(count == 5){
-                    //customer->state = token;
-                    customer->state = malloc((strlen(token)+1));
-                    strcpy(customer->state,token);
-                }
                 else{
-                    //customer->zip = token;
-                    customer->zip= malloc((strlen(token)+1));
-                    strcpy(customer->zip,token);
+                    ;
                 }
                 token = strtok(NULL, delim);
                 count++;
             }
-            add_node(key,customer);
+            //create a separate function to add order to q here
             count = 1;
         }
     }
     if(buffer) free(buffer);
     fclose(fp);
     return 1;
-
 }
