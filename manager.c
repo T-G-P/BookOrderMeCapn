@@ -12,6 +12,11 @@ int main(int argc, char** argv){
 
     parse_db(argv[1]);      //creating the customer database
 
+    int num_cats = number_categories(argv[3]);
+
+    //gets the categories and creates shared memory based on them
+    parse_categories(argv[3], num_cats);
+
 }
 
 int valid_file(char* file_name){
@@ -23,9 +28,21 @@ int valid_file(char* file_name){
             fclose(fp);
             return 0;
         }else{
-           fclose(fp);
+            fclose(fp);
             return 1;
         }
     }
     return 0;
 }
+
+int number_categories(char* file_name){
+    FILE* fp = fopen(file_name, "r");
+    int count = 0;
+    while((line_length = getline(&category, &sizeof_line, fp)) > 0){
+        count++;
+    }
+    fclose(fp);
+    return count;
+}
+
+

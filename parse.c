@@ -1,5 +1,12 @@
 #include "parse.h"
 
+#define start_key 1200
+
+extern shm_t *que;
+extern char **cat_names;
+extern int *pids;
+extern int *shm_keys;
+
 Node createNode(void* name, void* address, void* state, void* zip, void* id, int credit){
     Node llNode = malloc(sizeof(Node));
     llNode->name = name;
@@ -104,23 +111,40 @@ int parse_db(char* file_name){
     return 1;
 }
 
-int parse_categories(char* file_name){
+
+
+int parse_categories(char* file_name, int num_cats){
     FILE *fp = fopen(file_name, "r");
     size_t sizeof_line = 0;
     char* category = NULL;
-    int count=0;
     ssize_t line_length = 0;
     /*Taking the next line from fp, allocating space for it in buffer and returns
      * the length of the line
      */
-    while ((line_length = getline(&category, &sizeof_line, fp)) > 0) {
-        //create shared memory
-        //create consumer process
+    pids = malloc(sizeof(int) * num_cats);
+    que = malloc(sizeof(shm_t) * num_cats);
+    cat_names = malloc(sizeof(char*) * num_cats);
+
+    int i = 0;
+    while ((line_length = getline(&category, &sizeof_line, fp)) > 0){
+        cat_names[i] = malloc(strlen(category) + 1);
+        strcpy(cat_names[i], category);
+        i++;
     }
     if(category) free(category);
     fclose(fp);
-    return 1;
 
+    shm_keys = malloc(sizeof(int) * num_cats);
+    for(i = 0; i < num_cats; i++){
+        shm_keys[i] = start_key + i;
+    }
+
+    for(i = 0; i < num_cats; i++){
+        //taking a key, creating an shm, setting permission to r/w for the user
+        que[i] = shmget(shm_keys[i], sizeof(struct shm_map_), IPC_CREAT|0666);
+    }
+
+    return 1;
 }
 
 void print_files() {
