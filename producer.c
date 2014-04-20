@@ -1,40 +1,10 @@
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 #include <pthread.h>
+#include <string.h>
 #include "uthash.h"
-#include "parse.h"
 
-Node createNode(void* name, void* address, void* state, void* zip, void* id, int credit){
-    Node llNode = malloc(sizeof(Node));
-    llNode->name = name;
-    llNode->address = address;
-    llNode->state = state;
-    llNode->zip = zip;
-    llNode->id = id;
-    llNode->credit = credit;
-    return llNode;
-}
-
-struct hash *tokenHash = NULL;
-
-void add_node(void*key, void* customer){
-    struct hash *h;
-    HASH_FIND_STR(tokenHash, key, h); //search token hash for the key
-    if(h == NULL){  //if the token doesn't exist
-        h = (struct hash*)malloc(sizeof(struct hash));
-        h->key = key;  //the key for this new hash is the token
-        //printf("Inserting %s file into key %s\n",fileName,token);
-        h->customer = customer;
-        HASH_ADD_STR(tokenHash, key, h); //add this hash node to the hash table
-    }
-    else{   //the token exists in the hash table
-        //printf("Inserting %s into key %s\n",fileName,token);
-        h->customer = customer;   //add this node to the sorted list associated with the token
-    }
-}
-
-int parse_db(char* file_name){
+int producer(char* file_name){
     FILE *fp = fopen(file_name, "r");
     size_t sizeof_line = 0;
     char* buffer = NULL;
@@ -107,26 +77,5 @@ int parse_db(char* file_name){
     if(buffer) free(buffer);
     fclose(fp);
     return 1;
-}
 
-void print_files() {
-    struct hash *h;
-    Node ptr;
-    for(h=tokenHash; h != NULL; h=(struct hash*)(h->hh.next)) {
-        printf("This is the token: %s\n", h->key);  //print the token
-        ptr = h->customer;  //points to hash node
-        if(ptr){     //while the pointer is not null
-            printf("This is the customers name: %s\n", (char*)ptr->name);
-            printf("This is the customers id#: %s\n", (char*)ptr->id);
-            printf("This is the customers credit: %.2f\n", ptr->credit);
-            printf("This is the customers address %s\n", (char*)ptr->address);
-            printf("This is the customers state: %s\n", (char*)ptr->state);
-            printf("This is the customers zip code: %s\n", (char*)ptr->zip);
-        }
-    }
-}
-
-int main(int argc, char** argv){
-    parse_db("database.txt");
-    print_files();
 }

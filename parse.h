@@ -14,7 +14,7 @@ struct Node_{
     void* state;
     void* zip;
     void* id;
-    int credit;
+    float credit;
 };
 typedef struct Node_* Node;
 
