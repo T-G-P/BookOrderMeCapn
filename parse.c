@@ -2,10 +2,12 @@
 
 #define start_key 1200
 
-extern shm_t *que;
+extern shm_t *queue;
 extern char **cat_names;
 extern int *pids;
 extern int *shm_keys;
+extern shm_t customerdb_shm;
+extern customer_db_key;
 
 Node createNode(void* name, void* address, void* state, void* zip, void* id, int credit){
     Node llNode = malloc(sizeof(Node));
@@ -18,24 +20,6 @@ Node createNode(void* name, void* address, void* state, void* zip, void* id, int
     return llNode;
 }
 
-struct hash *tokenHash = NULL;
-
-void add_node(void*key, void* customer){
-    struct hash *h;
-    HASH_FIND_STR(tokenHash, key, h); //search token hash for the key
-    if(h == NULL){  //if the token doesn't exist
-        h = (struct hash*)malloc(sizeof(struct hash));
-        h->key = key;  //the key for this new hash is the token
-        //printf("Inserting %s file into key %s\n",fileName,token);
-        h->customer = customer;
-        HASH_ADD_STR(tokenHash, key, h); //add this hash node to the hash table
-    }
-    else{   //the token exists in the hash table
-        //printf("Inserting %s into key %s\n",fileName,token);
-        h->customer = customer;   //add this node to the sorted list associated with the token
-    }
-}
-
 int parse_db(char* file_name){
     FILE *fp = fopen(file_name, "r");
     size_t sizeof_line = 0;
@@ -44,10 +28,17 @@ int parse_db(char* file_name){
     char *delim = "\"|\n";
     char *key;
     int count=1;
+    int num_customers;
     ssize_t line_length = 0;
+
     /*Taking the next line from fp, allocating space for it in buffer and returns
      * the length of the line
      */
+
+    num_customers = get_num_customers(file_name);
+    customer_db_key = 1100;
+    customerdb_shm = shmget(customer_db__key, num_customers *sizeof(struct Node_), IPC_CREAT | 0666);
+
     while ((line_length = getline(&buffer, &sizeof_line, fp)) > 0) {
         printf("%s\n",buffer);
         token = strtok(buffer,delim);
@@ -102,16 +93,14 @@ int parse_db(char* file_name){
                 token = strtok(NULL, delim);
                 count++;
             }
-            add_node(key,customer);
-            count = 1;
+            //add_node(key,customer);
+             count = 1;
         }
     }
     if(buffer) free(buffer);
     fclose(fp);
     return 1;
 }
-
-
 
 int parse_categories(char* file_name, int num_cats){
     FILE *fp = fopen(file_name, "r");
@@ -122,7 +111,7 @@ int parse_categories(char* file_name, int num_cats){
      * the length of the line
      */
     pids = malloc(sizeof(int) * num_cats);
-    que = malloc(sizeof(shm_t) * num_cats);
+    queue = malloc(sizeof(shm_t) * num_cats);
     cat_names = malloc(sizeof(char*) * num_cats);
 
     int i = 0;
@@ -141,7 +130,7 @@ int parse_categories(char* file_name, int num_cats){
 
     for(i = 0; i < num_cats; i++){
         //taking a key, creating an shm, setting permission to r/w for the user
-        que[i] = shmget(shm_keys[i], sizeof(struct shm_map_), IPC_CREAT|0666);
+        queue[i] = shmget(shm_keys[i], sizeof(struct shm_map_), IPC_CREAT|0666);
     }
 
     return 1;
@@ -164,7 +153,8 @@ void print_files() {
     }
 }
 
-int main(int argc, char** argv){
+/*int main(int argc, char** argv){
     parse_db("database.txt");
     print_files();
 }
+*/

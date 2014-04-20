@@ -10,13 +10,41 @@ int main(int argc, char** argv){
         return 0;
     }
 
-    parse_db(argv[1]);      //creating the customer database
+    //create the customer database
+    parse_db(argv[1]);
 
     int num_cats = number_categories(argv[3]);
-
     //gets the categories and creates shared memory based on them
     parse_categories(argv[3], num_cats);
 
+    //launch consumer processes
+    for(int i = 0; i < num_cats; i++){
+        pids[i] = fork();
+        if(pids[i] == 0){
+            char *args[4];
+            args[0] = "consumer";
+            args[1] = shm_keys[i];
+            args[2] = CUSTDB_KEY; //macro for customer database shared memory key
+            args[3] = 0;
+            execvp("./consumer", args);
+            fprintf(stderr,"An error has occurred, could not start proccess\n");
+            _exit(0);
+        }
+    }
+
+    //launch producer thread
+    pthread_t producer_thread;
+    pthread_create(&producer_thread, NULL, producer, argv[2]);
+
+    //wait for producer to finish
+    pthread_join(producer_thread, NULL);
+
+    //close processes
+    for(i = 0; i < num_cats; i++){
+        kill(pids[i], SIGINT);
+        waitpid(pids[i], NULL, 0);
+    }
+    return 0;
 }
 
 int valid_file(char* file_name){
