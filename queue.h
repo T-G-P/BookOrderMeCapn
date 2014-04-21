@@ -6,10 +6,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <semaphore.h>
 #include "uthash.h"
-#include "producer.h"
 
 #define QUEUE_SIZE 10
+
+struct Order_{ // these are wrong
+    char* book_title;
+    float price;
+    char* id;
+    char* category;
+};
+typedef struct Order_* Order;
 
 struct shm_map_{
     char name[128];     //Name of the category
@@ -21,7 +29,7 @@ struct shm_map_{
 };
 typedef struct shm_map_* shmap;
 
-int enqueue(Order, shmap);    //adds order to the queue;
+int enqueue(struct Order_, shmap);    //adds order to the queue;
 
 int dequeue(Order, shmap);    //removes whatever's at the start of the queue, puts it into Order, Order must be malloc'd before
 #endif

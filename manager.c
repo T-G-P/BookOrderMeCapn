@@ -1,7 +1,10 @@
 #include "manager.h"
 
+extern int num_cats;
+
 int main(int argc, char** argv){
-    if(argc != 3){
+    int i;
+    if(argc != 4){
         printf("Incorrect # of arguments\n");
         return 0;
     }
@@ -9,23 +12,38 @@ int main(int argc, char** argv){
         printf("Please make sure all files exist and contain information\n");
         return 0;
     }
+    int id = shmget(1000, sizeof(int), IPC_CREAT | 0666);
+    int* total_money = shmat(id, NULL, 0);
+    memset(total_money, 0, sizeof(int));
 
     //create the customer database
     parse_db(argv[1]);
 
-    int num_cats = number_categories(argv[3]);
+    num_cats = number_categories(argv[3]);
     //gets the categories and creates shared memory based on them
-    parse_categories(argv[3], num_cats);
+    parse_categories(argv[3]);
 
     //launch consumer processes
-    for(int i = 0; i < num_cats; i++){
+    for(i = 0; i < num_cats; i++){
         pids[i] = fork();
         if(pids[i] == 0){
-            char *args[4];
+            char buffer1[128];
+            char buffer2[128];
+            char buffer3[128];
+            char buffer4[128];
+
+            sprintf(buffer1,"%d",shm_keys[i]);
+            sprintf(buffer2,"%d",customer_db_key);
+            sprintf(buffer3,"%d",num_customers);
+            sprintf(buffer4,"%d",1000);
+
+            char *args[6];
             args[0] = "consumer";
-            args[1] = shm_keys[i];
-            args[2] = CUSTDB_KEY; //macro for customer database shared memory key
-            args[3] = 0;
+            args[1] = buffer1;
+            args[2] = buffer2; //macro for customer database shared memory key
+            args[3] = buffer3;
+            args[4] = buffer4;
+            args[5] = 0;
             execvp("./consumer", args);
             fprintf(stderr,"An error has occurred, could not start proccess\n");
             _exit(0);
@@ -65,6 +83,9 @@ int valid_file(char* file_name){
 
 int number_categories(char* file_name){
     FILE* fp = fopen(file_name, "r");
+    size_t sizeof_line = 0;
+    char* category = NULL;
+    ssize_t line_length = 0;
     int count = 0;
     while((line_length = getline(&category, &sizeof_line, fp)) > 0){
         count++;

@@ -1,11 +1,11 @@
 #include "queue.h"
 
-int enqueue(Order customer_order, shmap q){
+int enqueue(struct Order_ customer_order, shmap q){
     if(q->length == QUEUE_SIZE){
         printf("Queue is full.\n");
         return 0;
     }else{
-       memcpy(&(q->queue[q->end]), customer_order, sizeof(struct Order_));
+       memcpy(&(q->queue[q->end]), &customer_order, sizeof(struct Order_));
        q->length++;
        if(q->end == 9){
            q->end = 0;
@@ -28,4 +28,5 @@ int dequeue(Order destination, shmap q){
     }else{
         q->start++;
     }
+    return 1;
 }

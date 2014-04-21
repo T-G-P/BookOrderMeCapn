@@ -24,7 +24,7 @@ void * producer(void* file_name){
             key = malloc(strlen(token)*sizeof(char));   //store this token as key
             sprintf(key,"%s",token);
             //count++;
-            Order nWo;      //this is an order
+            struct Order_ nWo;      //this is an order
 
             while(token != NULL && strlen(token) > 0){
                 if(strcmp(token,"")==0){
@@ -33,23 +33,20 @@ void * producer(void* file_name){
                 }
                 else if(count == 1){
                     //customer->name = token;
-                    nWo->book_title = malloc((strlen(token)+1));
-                    strcpy(nWo->book_title,token);
+                    strcpy(nWo.book_title,token);
                     //printf("%s, %s\n", token, customer->name);
                 }
                 else if(count == 2){
                     //customer->id = token;
-                    nWo->price = atof(token);
+                    nWo.price = atof(token);
                 }
                 else if(count == 3){
                     //customer->address = token;
-                    nWo->id = malloc((strlen(token)+1));
-                    strcpy(nWo->id,token);
+                    strcpy(nWo.id,token);
                 }
                 else if(count == 4){
                     //customer->address = token;
-                    nWo->category = malloc((strlen(token)+1));
-                    strcpy(nWo->category,token);
+                    strcpy(nWo.category,token);
 
                 }
                 else{
@@ -58,12 +55,24 @@ void * producer(void* file_name){
                 token = strtok(NULL, delim);
                 count++;
             }
-            //create a separate function to add order to q here
-
+            write_order(nWo);
             count = 1;
         }
     }
     if(buffer) free(buffer);
     fclose(fp);
-    return 1;
+    return NULL;
+}
+//in consumer use the key for shmget
+//shmget returns an id. Get pointer from shmat
+
+void write_order(struct Order_ cust_order){
+    int i;
+    for(i = 0; i<num_cats; i++){
+        if(strcmp(cat_names[i],cust_order.category)==0){
+            break;
+        }
+    }
+    enqueue(cust_order,queue[i]);
+
 }

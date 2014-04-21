@@ -10,7 +10,10 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/wait.h>
 #include <pthread.h>
+#include <unistd.h>
+#include <signal.h>
 #include "uthash.h"
 #include "parse.h"
 #include "queue.h"
@@ -18,8 +21,7 @@
 
 int valid_file(char*);
 
-
-
+int number_categories(char*);
 
 #endif
 

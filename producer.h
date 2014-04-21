@@ -11,16 +11,15 @@
 #include <sys/shm.h>
 #include <pthread.h>
 #include "uthash.h"
+#include "queue.h"
+#include "parse.h"
 
+//extern int num_cats;
+//extern char **cat_names;
+//extern shmap *queue;
 
-struct Order_{
-    char* book_title;
-    float price;
-    char* id;
-    char* category;
-};
-typedef struct Order_* Order;
+void * producer(void*);
 
-int producer(char*);
+void write_order(struct Order_);
 
 #endif
