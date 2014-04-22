@@ -13,7 +13,7 @@ void * producer(void* file_name){
      * the length of the line
      */
     while ((line_length = getline(&buffer, &sizeof_line, fp)) > 0) {
-        printf("%s\n",buffer);
+        //printf("%s\n",buffer);
         token = strtok(buffer,delim);
         if(token == NULL){  //case where there is no token
             continue;       //go to next line
@@ -55,7 +55,7 @@ void * producer(void* file_name){
                 token = strtok(NULL, delim);
                 count++;
             }
-            write_order(nWo);
+            write_order(&nWo);
             count = 1;
         }
     }
@@ -66,13 +66,17 @@ void * producer(void* file_name){
 //in consumer use the key for shmget
 //shmget returns an id. Get pointer from shmat
 
-void write_order(struct Order_ cust_order){
+void write_order(Order cust_order){
     int i;
-    for(i = 0; i<num_cats; i++){
-        if(strcmp(cat_names[i],cust_order.category)==0){
-            break;
+    for(i = 0; i < num_cats; i++){
+        if(strcmp(cat_names[i],cust_order->category)==0){
+			printf("Enqueueing...\n");
+			printf("%s\n",cust_order->book_title);
+			sem_wait(&queue[i]->lock);
+			enqueue(cust_order,queue[i]);
+			sem_post(&queue[i]->lock);
+            return;
         }
     }
-    enqueue(cust_order,queue[i]);
-
+	printf("No name found. bleh.\n");
 }

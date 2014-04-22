@@ -11,11 +11,11 @@
 
 #define QUEUE_SIZE 10
 
-struct Order_{ // these are wrong
-    char* book_title;
+struct Order_{
+    char book_title[256];
     float price;
-    char* id;
-    char* category;
+    char id[128];
+    char category[128];
 };
 typedef struct Order_* Order;
 
@@ -29,7 +29,7 @@ struct shm_map_{
 };
 typedef struct shm_map_* shmap;
 
-int enqueue(struct Order_, shmap);    //adds order to the queue;
+int enqueue(Order, shmap);    //adds order to the queue;
 
 int dequeue(Order, shmap);    //removes whatever's at the start of the queue, puts it into Order, Order must be malloc'd before
 #endif

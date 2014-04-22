@@ -1,7 +1,5 @@
 #include "manager.h"
 
-extern int num_cats;
-
 int main(int argc, char** argv){
     int i;
     if(argc != 4){
@@ -24,6 +22,7 @@ int main(int argc, char** argv){
     parse_categories(argv[3]);
 
     //launch consumer processes
+    printf("Launching consumers...\n");
     for(i = 0; i < num_cats; i++){
         pids[i] = fork();
         if(pids[i] == 0){
@@ -38,16 +37,20 @@ int main(int argc, char** argv){
             sprintf(buffer4,"%d",1000);
 
             char *args[6];
-            args[0] = "consumer";
+            args[0] = "Consumer";
             args[1] = buffer1;
             args[2] = buffer2; //macro for customer database shared memory key
             args[3] = buffer3;
             args[4] = buffer4;
             args[5] = 0;
-            execvp("./consumer", args);
+			printf("Launching consumer...\n");
+            execvp("./Consumer", args);
+			printf("Try to print this to stdout, because the process might now have been created\n");
             fprintf(stderr,"An error has occurred, could not start proccess\n");
             _exit(0);
-        }
+        }else{
+			printf("CONSUMER: %d\n", pids[i]);
+		}
     }
 
     //launch producer thread
@@ -56,17 +59,26 @@ int main(int argc, char** argv){
 
     //wait for producer to finish
     pthread_join(producer_thread, NULL);
+	printf("the producer has finished\n");
+	sleep(3);
 
     //close processes
     for(i = 0; i < num_cats; i++){
-        kill(pids[i], SIGINT);
+        printf("KILLING CONSUMER: %d\n", pids[i]);
+		kill(pids[i], SIGINT);
         waitpid(pids[i], NULL, 0);
     }
+	for(i = 0; i < num_cats; i++){
+		shmdt(queue[i]);
+	}
     return 0;
 }
 
 int valid_file(char* file_name){
     FILE* fp = fopen(file_name, "r");
+	if(!fp){
+		return 0;
+	}
     fseek (fp, 0, SEEK_END);
     int size = ftell(fp);
     if(fp){

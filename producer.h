@@ -20,6 +20,6 @@
 
 void * producer(void*);
 
-void write_order(struct Order_);
+void write_order(Order);
 
 #endif

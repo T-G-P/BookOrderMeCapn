@@ -1,9 +1,10 @@
 #ifndef PARSE_H
 #define PARSE_H
-#define start_key 1200
+#define start_key 1300
 /*
  * parse.h
  */
+#include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +15,6 @@
 #include "uthash.h"
 #include "queue.h"
 #include "manager.h"
-#include "producer.h"
 
 typedef struct Node_* Node;
 extern shmap *queue;

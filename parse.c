@@ -1,6 +1,6 @@
 #include "parse.h"
 
-shmap *queue;
+struct shm_map_ **queue;
 char **cat_names;
 int *pids;
 int *shm_keys;
@@ -59,17 +59,14 @@ int parse_db(char* file_name){
             //count++;
             struct Node_ customer;
 
-            printf("%s\n", token);
             while(token != NULL && strlen(token) > 0){
                 if(strcmp(token,"")==0){
                     token = strtok(NULL,delim);
-                    printf("%s\n", token);
                     continue;
                 }
                 else if(count == 1){
                     //customer->name = token;
                     strcpy(customer.name,token);
-                    printf("%s, %s\n", token, (char *)customer.name);
                 }
                 else if(count == 2){
                     //customer->id = token;
@@ -97,9 +94,9 @@ int parse_db(char* file_name){
             sem_init(&customer.rejection,1,1);
 
             //inserting customer node into customer into database here
-            if(index < num_customers*sizeof(struct Node_)){
-                customerdb_shm[index] = customer;
-                index+=sizeof(struct Node_);
+            if(index < num_customers){
+                memcpy(&customerdb_shm[index], &customer, sizeof(struct Node_));
+                index++;
             }
             count = 1;
         }
@@ -111,24 +108,24 @@ int parse_db(char* file_name){
 
 int parse_categories(char* file_name){
     FILE *fp = fopen(file_name, "r");
-    size_t sizeof_line = 0;
-    char* category = NULL;
+    char *category = NULL;
+	size_t sizeof_line = 0;
     ssize_t line_length = 0;
     /*Taking the next line from fp, allocating space for it in buffer and returns
      * the length of the line
      */
     pids = malloc(sizeof(int) * num_cats);
-    queue = malloc(sizeof(shmap) * num_cats);
+    queue = malloc(sizeof(struct shm_map_ *) * num_cats);
     cat_names = malloc(sizeof(char*) * num_cats);
     queueid = malloc(sizeof(int)*num_cats);
 
     int i = 0;
-    while ((line_length = getline(&category, &sizeof_line, fp)) > 0){
-        cat_names[i] = malloc(strlen(category) + 1);
+    while ((line_length = getline(&category, &sizeof_line, fp)) != -1){
+		cat_names[i] = malloc(strlen(category) + 1);
         strcpy(cat_names[i], category);
+		cat_names[i][strlen(category)-1] = '\0';
         i++;
     }
-    if(category) free(category);
     fclose(fp);
 
     shm_keys = malloc(sizeof(int) * num_cats);
@@ -139,10 +136,23 @@ int parse_categories(char* file_name){
     for(i = 0; i < num_cats; i++){
         //taking a key, creating an shm, setting permission to r/w for the user
         queueid[i] = shmget(shm_keys[i], sizeof(struct shm_map_), IPC_CREAT|0666);
-        queue[i] = shmat(queueid[i],NULL,0);
+		queue[i] = (struct shm_map_ *)shmat(queueid[i],NULL,0);
+		printf("queue[i]: %p\n", (void *)queue[i]);
+		if(queueid[i] == -1){
+			shmdt(queue[i]);
+			printf("Whoops\n");
+			_exit(0);
+		}
         memset(queue[i], 0, sizeof(struct shm_map_));
+		queue[i]->length = 0;
+		queue[i]->start = 0;
+		queue[i]->end = 0;
+		sem_init(&queue[i]->lock, 1, 1);
     }
-
+	
+	for(i = 0; i < num_cats; i++){
+		printf("%s\n", cat_names[i]);
+	}
     return 1;
 }
 
